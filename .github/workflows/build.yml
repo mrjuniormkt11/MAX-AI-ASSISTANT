@@ -28,7 +28,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          accept-android-sdk-licenses: true
+            packages: ''
 
       - name: Extract MAX Project
         run: |
