@@ -1,3 +1,4 @@
+
 name: Build MAX Android APK
 
 on:
@@ -7,12 +8,15 @@ on:
       - 'MAX_Project_for_GitHub.zip'
       - '.github/workflows/build.yml'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Java
@@ -23,22 +27,37 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+
+      - name: Extract MAX Project
+        run: |
+          unzip -q MAX_Project_for_GitHub.zip -d extracted
+
+          PROJECT_DIR=$(find extracted -type f \
+            \( -name settings.gradle.kts -o -name settings.gradle \) \
+            -printf '%h\n' | head -n 1)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Gradle project not found in ZIP"
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Extract MAX
+      - name: Build MAX APK
         run: |
-          unzip -q MAX_Project_for_GitHub.zip
-          test -f app/build.gradle.kts
+          cd "$PROJECT_DIR"
+          gradle --no-daemon assembleDebug
 
-      - name: Build APK
-        run: gradle --no-daemon assembleDebug
-
-      - name: Save APK
+      - name: Upload MAX APK
         uses: actions/upload-artifact@v4
         with:
           name: MAX-Android-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: extracted/**/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
