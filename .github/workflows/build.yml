@@ -5,8 +5,9 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'MAX_Project_for_GitHub.zip'
-      - '.github/workflows/build.yml'
+   unzip -q "MAX_Project_for_GitHub (1).zip" -d extracted
+      
+  
 
 permissions:
   contents: read
